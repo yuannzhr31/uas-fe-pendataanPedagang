@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendataan Pedagang Yuanda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #4caf50;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+
+</head>
+
+
+    <body>
+        <h1>PENDATAAN PEDAGANG</h1>
+        <form>
+            <label for="nama_produk">Nama Produk :</label><br>
+            <input type="text" id="nama_produk" name="nama_produk"><br>
+
+            <label for="nama_pedagang">Nama Pedagang :</label><br>
+            <input type="text" id="nama_pedagang" name="nama_pedagang"><br>
+
+            <label for="lokasi">Lokasi :</label><br>
+            <input type="text" id="lokasi" name="lokasi"><br>
+
+            <label for="kontak">Kontak :</label><br>
+            <input type="text" id="kontak" name="kontak"><br>
+
+            <label for="jumlah_produk">jumlah Produk :</label><br>
+            <input type="text" id="jumlah_produk" name="jumlah_produk"><br>
+
+
+            <button type="button" onclick="saveData()" id="button">Simpan</button>
+
+
+</form>
+
+<h1>DAFTAR PEDAGANG</h1>
+<table>
+    <thead>
+        <tr>
+            <th>No.</th>
+            <th>Nama Produk</th>
+            <th>Nama Pedagang</th>
+            <th>Lokasi</th>
+            <th>Kontak</th>
+            <th>Jumlah Produk</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="sellers"></tbody>
+</table>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<script>
+    const saveData = async () => {
+        let nama_produkForm = document.getElementById("nama_produk").value;
+        let nama_pedagangForm = document.getElementById("nama_pedagang").value;
+        let lokasiForm = document.getElementById("lokasi").value;
+        let kontakForm = document.getElementById("kontak").value;
+        let jumlah_produkForm = document.getElementById("jumlah_produk").value;
+        await axios.post(' http://103.163.110.11:3031/sellers', {
+            nama_produk: nama_produkForm,
+            nama_pedagang: nama_pedagangForm,
+            lokasi: lokasiForm,
+            kontak: kontakForm,
+            jumlah_produk: jumlah_produkForm
+        })
+            .then((response) => {
+                alert('Data berhasil disimpan!');
+                getSellers();
+            })
+            .catch((error) => {
+                console.log(error.message);
+            });
+    }
+
+    const getSellers = async () => {
+        await axios.get('http://103.163.110.11:3031/sellers')
+            .then((response) => {
+                let bucket = '';
+                let sellers = response.data;
+                sellers.forEach((seller, i) => {
+                    bucket += `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${seller.nama_produk}</td>
+                                <td>${seller.nama_pedagang}</td>
+                                <td>${seller.lokasi}</td>
+                                <td>${seller.kontak}</td>
+                                <td>${seller.jumlah_produk}</td>
+                                <td>
+                                    <button onclick="editData('${seller.id}','${seller.nama_produk}','${seller.nama_pedagang}','${seller.lokasi}','${seller.kontak}','${seller.jumlah_produk}')">Edit</button>
+                                    <button onclick="deleteData(${seller.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                });
+                document.getElementById('sellers').innerHTML = bucket;
+            })
+            .catch((error) => {
+                console.log(error.message);
+            });
+    }
+    getSellers();
+
+    const deleteData = async (id) => {
+        await axios.delete(`http://103.163.110.11:3031/sellers/${id}`)
+            .then((response) => {
+                alert('Data berhasil dihapus');
+                getSellers();
+            })
+            .catch((error) => {
+                console.log(error.message);
+            });
+    }
+
+    const editData = (id, nama_produk, nama_pedagang, lokasi, kontak, jumlah_produk) => {
+        document.getElementById('nama_produk').value = nama_produk;
+        document.getElementById('nama_pedagang').value = nama_pedagang;
+        document.getElementById('lokasi').value = lokasi;
+        document.getElementById('kontak').value = kontak;
+        document.getElementById('jumlah_produk').value = jumlah_produk;
+        document.getElementById('button').innerText = 'Update';
+        document.getElementById('button').setAttribute('onclick', `updateData(${id})`);
+    }
+
+    const updateData = async (id) => {
+        let nama_produkForm = document.getElementById("nama_produk").value;
+        let nama_pedagangForm = document.getElementById("nama_pedagang").value;
+        let lokasiForm = document.getElementById("lokasi").value;
+        let kontakForm = document.getElementById("kontak").value;
+        let jumlah_produkForm = document.getElementById("jumlah_produk").value;
+        await axios
+            .patch(`http://103.163.110.11:3031/sellers/${id}`, {
+                nama_produk: nama_produkForm,
+                nama_pedagang: nama_pedagangForm,
+                lokasi: lokasiForm,
+                kontak: kontakForm,
+                jumlah_produk: jumlah_produkForm
+            })
+            .then((response) => {
+                alert("Data berhasil diubah");
+                getSellers();
+                resetForm();
+            })
+            .catch((error) => {
+                console.log(error.message);
+            });
+    };
+
+    const resetForm = () => {
+        document.getElementById("nama_produk").value = "";
+        document.getElementById("nama_pedagang").value = "";
+        document.getElementById("lokasi").value = "";
+        document.getElementById("kontak").value = "";
+        document.getElementById("jumlah_produk").value = "";
+        document.getElementById("button").innerText = "Save";
+        document.getElementById("button").setAttribute("onclick", "saveData()");
+    };
+
+</script>
+</body>
+
+</html>
